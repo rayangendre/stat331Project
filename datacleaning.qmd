@@ -1,17 +1,38 @@
 ---
 title: "datacleaning"
+author: "Alex Arrieta, "
 format: html
 editor: visual
 ---
 
-## Quarto
-
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+```{r setup}
+library(tidyverse)
+here::i_am("stat331Project/datacleaning.qmd")
+library(here)
+gdp <- read_csv(here("stat331Project", "gdp_pcap.csv"))
+water_access <- read_csv(here("stat331Project", "at_least_basic_water_source_overall_access_percent.csv"))
+```
 
 ```{r}
-1 + 1
+temp <- gdp |>
+  mutate(across(everything(), as.character)) |>
+  pivot_longer(cols = `1800`:`2100`, names_to = "year", values_to = "gdppc") |>
+  select(country, year, gdppc)
+gdp_clean <- gdp |>
+  mutate(across(everything(), as.character)) |>
+  pivot_longer(cols = `1800`:`2100`, names_to = "year", values_to = "gdppc") |>
+  select(country, year, gdppc) |>
+  mutate(gdppc = if_else(str_detect(gdppc, "k"), as.numeric(str_extract(gdppc, "[0-9|.]*")) * 1000, as.numeric(gdppc)))
+
+#mutate(gdppc = replace(gdppc, str_detect(gdppc, "k"), as.double(str_extract(gdppc, "[0-9|.]*")) * 1000))
+
+gdp_clean
+
+water_access_clean <- water_access |>
+  pivot_longer(cols = `2000`: `2022`, names_to = "year", values_to = "access", values_drop_na = TRUE) |>
+  select(country, year, access)
+
+joined <- gdp_clean |>
+  merge(water_access_clean, by = c("country", "year"))
+joined
 ```
