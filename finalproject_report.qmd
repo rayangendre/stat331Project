@@ -1,0 +1,72 @@
+---
+title: "Final Project Written Report"
+author: "Alex Arrieta, Rayan Gendre, Alvaro Ramos, Jackson Isidor"
+format: 
+  html:
+    embed-resources: true
+    self-contained: true
+    code-tools: true
+    toc: true
+    code-fold: true
+    theme: flatly
+    number-sections: true
+editor: source
+execute: 
+  error: true
+  echo: true
+  message: false
+  warning: false
+---
+```{r setup}
+library(tidyverse)
+library(here)
+
+# loading in our data sets
+gdp <- read_csv(here("gdp_pcap.csv"))
+wateraccess <- read_csv(here("at_least_basic_water_source_overall_access_percent.csv"))
+```
+
+
+## Project Proposal
+For this project, we will be assessing the relationship between GDP and the percentage of people that have access to a basic water source. (COPY OVER INFO FROM GOOGLE DOC)
+
+### Data Cleaning
+```{r}
+# Pivoting and cleaning the gdp dataset
+gdp_clean <- gdp |>
+  mutate(across(.cols = everything(),
+                .f = ~ as.character(.x)
+                )
+         ) |>
+  pivot_longer(cols = `1800`:`2100`, 
+               names_to = "year", 
+               values_to = "gdp_pc"
+               ) |>
+  mutate(gdp_pc = if_else(condition = str_detect(gdp_pc, "k$"),
+                          true = as.numeric(str_extract(gdp_pc, "[0-9|.]*")) * 1000,
+                          false = as.numeric(gdp_pc)
+                          ),
+         country = as.factor(country),
+         year = as.numeric(year)
+         )
+
+# Pivoting and cleaning the water_access dataset
+wateraccess_clean <- wateraccess |>
+  pivot_longer(cols = `2000`:`2022`,
+               names_to = "year",
+               values_to = "access_pct",
+               values_drop_na = TRUE
+               ) |>
+  mutate(country = as.factor(country),
+         year = as.numeric(year),
+         access_pct = as.numeric(access_pct)
+         )
+
+# Joining the two datasets
+gdp_v_water <- gdp_clean |> 
+  inner_join(wateraccess_clean,
+            by = join_by(country, year)
+            )
+```
+
+
