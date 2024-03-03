@@ -28,9 +28,29 @@ wateraccess <- read_csv(here("at_least_basic_water_source_overall_access_percent
 
 
 ## Project Proposal
-For this project, we will be assessing the relationship between GDP and the percentage of people that have access to a basic water source. (COPY OVER INFO FROM GOOGLE DOC)
+For this project, we are interested in assessing the relationship between a country's GDP and the percentage of people within that country that have access to a basic water source. To do accomplish this, we will be using two datasets from Gapminder that correspond to our variables of interest.
+
+### The Data
+Our two variables of interest (and their related datasets) are:
+
+**At least a basic water source, overall access %**
+
+This variable's dataset displays the percent of people who are using at least basic water services by Country and by Year from 2000 to 2022. The percentage encompasses both the people who have access to basic water services as well as those who have access to safe water services. The dataset defines a basic water service as water from an improved source and collection is not more than 30 minutes for a round trip.
+
+**GDP per capita (Price and inflation adjusted)**
+
+This variable's dataset displays the Gross domestic product per person adjusted for differences in purchasing power, where each observation displays information for a Country in a given Year beginning in 1800 and going to present day. The values are displayed in international dollars and are fixed at 2017 prices.
+
+### Hypothesized Relationship
+We hypothesize that there will be a positive relationship between the percentage of the country's population that has access to water and the GDP per capita. This means that as the percentage of the population has access to water increases, then the GDP per capita of the country will also increase. Our basis for this is that countries with more prevalent global economies such as the United States and European countries have better access to water and safer modern ways for their citizens to access water. And when people have better access to water they can spend more time developing other areas of the country and business which leads to a more powerful economy and a better GDP per capita.
 
 ### Data Cleaning
+Because each variable has their own dataset, we will have to clean and combine the two datasets together to assess the relationship between the two variables. Starting with the GDP per capita dataset, some values have the letter `k` embedded alongside the numeric value, preventing us to pivot the dataset into a longer format. To get around this, we forced every column in our dataset to become character variables so every column is the same data type. Once our data has been pivoted, we could then address the issue of embedded `k`'s by extracting the numbers for values that did contain a `k`, and then multiplying these values by 1000 while also converting these values to a numeric data type. Afterwards, we converted the remaining variables (country and year) to an appropriate data type.
+
+The process for cleaning the water access dataset was much easier than for the GDP per capita dataset, as we did not have to deal with the issue of embedded `k`'s. Therefore, all we had to do for this dataset was pivot and then convert the remaining columns/variables to an appropriate data type. Additionally, we dropped any observtions that contained any missing or NA values.
+
+Once each dataset had been pivoted and cleaned, we could then join our two datasets through an inner join by country and by year.
+
 ```{r}
 # Pivoting and cleaning the gdp dataset
 gdp_clean <- gdp |>
@@ -68,5 +88,7 @@ gdp_v_water <- gdp_clean |>
             by = join_by(country, year)
             )
 ```
+## Linear Regression
+## Simulation
 
 
