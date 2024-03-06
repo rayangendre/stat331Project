@@ -34,5 +34,5 @@ water_access_clean <- water_access |>
 
 joined <- gdp_clean |>
   merge(water_access_clean, by = c("country", "year"))
-joined
+write_csv(joined, "cleanData.csv")
 ```
