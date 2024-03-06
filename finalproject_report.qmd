@@ -20,6 +20,7 @@ execute:
 ```{r setup}
 library(tidyverse)
 library(here)
+library(knitr)
 
 # loading in our data sets
 gdp <- read_csv(here("gdp_pcap.csv"))
@@ -87,6 +88,8 @@ gdp_v_water <- gdp_clean |>
   inner_join(wateraccess_clean,
             by = join_by(country, year)
             )
+
+kable(head(gdp_v_water), format = "markdown")
 ```
 ## Linear Regression
 ## Simulation
