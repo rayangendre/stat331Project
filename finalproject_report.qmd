@@ -92,6 +92,44 @@ gdp_v_water <- gdp_clean |>
 kable(head(gdp_v_water), format = "markdown")
 ```
 ## Linear Regression
+```{r}
+library(ggplot2)
+
+average_gdp <- gdp_v_water %>%
+  group_by(year) %>%
+  summarise(avg_gdp_pc = log(median(gdp_pc, na.rm = TRUE)))
+
+average_water <- gdp_v_water |>
+  group_by(year) %>%
+  summarise(avg_water_access = log(median(access_pct, na.rm = TRUE)) )
+
+average_water
+
+ggplot() +
+  geom_point(data = average_gdp, aes(x = year, y = avg_gdp_pc), color = "blue") +
+  geom_point(data = average_water, aes(x = year, y = avg_water_access), color = "red") +
+  labs(x = "Year", y = "Average Value", title = "Average Water Access Percentage vs Average GDP per Capita by Year") +
+  theme_minimal()
+
+
+
+
+```
+```{r}
+
+gdp_v_water |>
+  ggplot(aes(x = log(gdp_pc), y = log(access_pct) )) +
+  geom_jitter() + 
+  geom_smooth(method = "lm", formula = y ~ log(x), se = FALSE, color = "blue")
+
+```
+
+
+```{r}
+
+
+
+```
 ## Simulation
 
 
