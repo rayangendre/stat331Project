@@ -21,12 +21,12 @@ execute:
 library(tidyverse)
 library(here)
 library(knitr)
+library(gganimate)
 
 # loading in our data sets
 gdp <- read_csv(here("gdp_pcap.csv"))
 wateraccess <- read_csv(here("at_least_basic_water_source_overall_access_percent.csv"))
 ```
-
 
 ## Project Proposal
 For this project, we are interested in assessing the relationship between a country's GDP and the percentage of people within that country that have access to a basic water source. To do accomplish this, we will be using two datasets from Gapminder that correspond to our variables of interest.
@@ -34,11 +34,11 @@ For this project, we are interested in assessing the relationship between a coun
 ### The Data
 Our two variables of interest (and their related datasets) are:
 
-**At least a basic water source, overall access %**
+**At least a basic water source, overall access %** ***[Response]***
 
 This variable's dataset displays the percent of people who are using at least basic water services by Country and by Year from 2000 to 2022. The percentage encompasses both the people who have access to basic water services as well as those who have access to safe water services. The dataset defines a basic water service as water from an improved source and collection is not more than 30 minutes for a round trip.
 
-**GDP per capita (Price and inflation adjusted)**
+**GDP per capita (Price and inflation adjusted)** ***[Explanatory]***
 
 This variable's dataset displays the Gross domestic product per person adjusted for differences in purchasing power, where each observation displays information for a Country in a given Year beginning in 1800 and going to present day. The values are displayed in international dollars and are fixed at 2017 prices.
 
@@ -50,7 +50,7 @@ Because each variable has their own dataset, we will have to clean and combine t
 
 The process for cleaning the water access dataset was much easier than for the GDP per capita dataset, as we did not have to deal with the issue of embedded `k`'s. Therefore, all we had to do for this dataset was pivot and then convert the remaining columns/variables to an appropriate data type. Additionally, we dropped any observtions that contained any missing or NA values.
 
-Once each dataset had been pivoted and cleaned, we could then join our two datasets through an inner join by country and by year.
+Once each dataset had been pivoted and cleaned, we could then join our two datasets through an inner join by country and by year. To help with visualization, we also created a new variable called `region` which indicates the world region that a country resides in.
 
 ```{r}
 # Pivoting and cleaning the gdp dataset
@@ -87,11 +87,250 @@ wateraccess_clean <- wateraccess |>
 gdp_v_water <- gdp_clean |> 
   inner_join(wateraccess_clean,
             by = join_by(country, year)
-            )
+            ) |> 
+  mutate(region = fct_collapse(country,
+                               "Asia" = c("Afghanistan",
+                                          "Australia",
+                                          "Bahrain",
+                                          "Bangladesh",
+                                          "Bhutan",
+                                          "Brunei",
+                                          "Cambodia",
+                                          "China",
+                                          "Hong Kong, China",
+                                          "Fiji",
+                                          "India",
+                                          "Indonesia",
+                                          "Iran",
+                                          "Iraq",
+                                          "Israel",
+                                          "Japan",
+                                          "Jordan",
+                                          "Kazakhstan",
+                                          "Kiribati",
+                                          "Kuwait",
+                                          "Kyrgyz Republic",
+                                          "Lao",
+                                          "Lebanon",
+                                          "Malaysia",
+                                          "Maldives",
+                                          "Marshall Islands",
+                                          "Micronesia, Fed. Sts.",
+                                          "Mongolia",
+                                          "Myanmar",
+                                          "Nauru",
+                                          "Nepal",
+                                          "New Zealand",
+                                          "North Korea",
+                                          "Oman",
+                                          "Pakistan",
+                                          "Palestine",
+                                          "Palau",
+                                          "Papua New Guinea",
+                                          "Philippines",
+                                          "Qatar",
+                                          "Samoa",
+                                          "Saudi Arabia",
+                                          "Singapore",
+                                          "Solomon Islands",
+                                          "South Korea",
+                                          "Sri Lanka",
+                                          "Syria",
+                                          "Tajikistan",
+                                          "Thailand",
+                                          "Timor-Leste",
+                                          "Tonga",
+                                          "Turkmenistan",
+                                          "Tuvalu",
+                                          "UAE",
+                                          "Uzbekistan",
+                                          "Vanuatu",
+                                          "Vietnam",
+                                          "Yemen"),
+                               "Africa" = c("Algeria",
+                                          "Angola",
+                                          "Benin",
+                                          "Botswana",
+                                          "Burkina Faso",
+                                          "Burundi",
+                                          "Cameroon",
+                                          "Cape Verde",
+                                          "Central African Republic",
+                                          "Chad",
+                                          "Comoros",
+                                          "Congo, Dem. Rep.",
+                                          "Congo, Rep.",
+                                          "Cote d'Ivoire",
+                                          "Djibouti",
+                                          "Egypt",
+                                          "Equatorial Guinea",
+                                          "Eritrea",
+                                          "Eswatini",
+                                          "Ethiopia",
+                                          "Gabon",
+                                          "Gambia",
+                                          "Ghana",
+                                          "Guinea",
+                                          "Guinea-Bissau",
+                                          "Kenya",
+                                          "Lesotho",
+                                          "Liberia",
+                                          "Libya",
+                                          "Madagascar",
+                                          "Malawi",
+                                          "Mali",
+                                          "Mauritania",
+                                          "Mauritius",
+                                          "Morocco",
+                                          "Mozambique",
+                                          "Namibia",
+                                          "Niger",
+                                          "Nigeria",
+                                          "Palau",
+                                          "Rwanda",
+                                          "Sao Tome and Principe",
+                                          "Senegal",
+                                          "Seychelles",
+                                          "Sierra Leone",
+                                          "Somalia",
+                                          "South Africa",
+                                          "South Sudan",
+                                          "Sudan",
+                                          "Tanzania",
+                                          "Togo",
+                                          "Tunisia",
+                                          "Uganda",
+                                          "Zambia",
+                                          "Zimbabwe"),
+                               "Americas" = c("Antigua and Barbuda",
+                                            "Argentina",
+                                            "Bahamas",
+                                            "Barbados",
+                                            "Belize",
+                                            "Bolivia",
+                                            "Brazil",
+                                            "Canada",
+                                            "Chile",
+                                            "Colombia",
+                                            "Costa Rica",
+                                            "Cuba",
+                                            "Dominica",
+                                            "Dominican Republic",
+                                            "Ecuador",
+                                            "El Salvador",
+                                            "Grenada",
+                                            "Guatemala",
+                                            "Guyana",
+                                            "Haiti",
+                                            "Honduras",
+                                            "Jamaica",
+                                            "Mexico",
+                                            "Nicaragua",
+                                            "Panama",
+                                            "Paraguay",
+                                            "Peru",
+                                            "St. Kitts and Nevis",
+                                            "St. Lucia",
+                                            "St. Vincent and the Grenadines",
+                                            "Suriname",
+                                            "Trinidad and Tobago",
+                                            "USA",
+                                            "Uruguay",
+                                            "Venezuela"),
+                               "Europe" = c("Albania",
+                                            "Andorra",
+                                            "Armenia",
+                                            "Austria",
+                                            "Azerbaijan",
+                                            "Belarus",
+                                            "Belgium",
+                                            "Bosnia and Herzegovina",
+                                            "Bulgaria",
+                                            "Croatia",
+                                            "Cyprus",
+                                            "Czech Republic",
+                                            "Denmark",
+                                            "Estonia",
+                                            "Finland",
+                                            "France",
+                                            "Georgia",
+                                            "Germany",
+                                            "Greece",
+                                            "Hungary",
+                                            "Iceland",
+                                            "Ireland",
+                                            "Italy",
+                                            "Latvia",
+                                            "Lithuania",
+                                            "Luxembourg",
+                                            "Malta",
+                                            "Moldova",
+                                            "Monaco",
+                                            "Montenegro",
+                                            "Netherlands",
+                                            "North Macedonia",
+                                            "Norway",
+                                            "Poland",
+                                            "Portugal",
+                                            "Romania",
+                                            "Russia",
+                                            "San Marino",
+                                            "Serbia",
+                                            "Slovak Republic",
+                                            "Slovenia",
+                                            "Spain",
+                                            "Sweden",
+                                            "Switzerland",
+                                            "Turkey",
+                                            "UK",
+                                            "Ukraine"),
+                               other_level = "other"
+                               ),
+         .after = country
+         )
 
 kable(head(gdp_v_water), format = "markdown")
 ```
+
 ## Linear Regression
+
+### Data Visualization
+```{r}
+gdp_v_water |> 
+  ggplot(aes(x = gdp_pc,
+             y = access_pct,
+             fill = region,
+             color = region,
+             shape = region)
+         ) +
+  geom_point() +
+  theme_bw() +
+  scale_color_manual(values = c("#e66101",
+                                "#fdb863",
+                                "#b2abd2",
+                                "#5e3c99")
+                     )+
+  scale_fill_manual(values = c("#e66101",
+                                "#fdb863",
+                                "#b2abd2",
+                                "#5e3c99")
+                     ) +
+  scale_shape_manual(values = 21:24) +
+  labs(x = "GDP Per Capita",
+       y = "",
+       subtitle = "% of Pop. with Basic Water Access",
+       title = "Relationship between Water Access and GDP",
+       tag = "Year: {frame_time}",
+       fill = "World Region",
+       color = "World Region",
+       shape = "World Region"
+       ) +
+  transition_time(as.integer(year)) +
+  ease_aes('linear')
+```
+
+
+### Linear Regression
 ```{r}
 library(ggplot2)
 
@@ -124,12 +363,8 @@ gdp_v_water |>
 
 ```
 
+### Model Fit
 
-```{r}
-
-
-
-```
 ## Simulation
 
 
