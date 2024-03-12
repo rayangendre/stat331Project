@@ -294,6 +294,7 @@ kable(head(gdp_v_water), format = "markdown")
 ```
 
 ## Linear Regression
+Now that we have our combined dataset, we can now assess the relationship between a country's GDP per capita and the proportion of their population that has access to water. Before fitting a linear regression model, we would like to look at the relationship between the two variables over time.
 
 ### Data Visualization
 ```{r}
@@ -331,22 +332,26 @@ gdp_v_water |>
 ```
 
 When assessing the relationship between Water Access vs. GDP over time through an animated plot, we can see that there generally seems to be a strong, positive **non-linear** relationship between the two variables; while countries with larger GDP per capita tend to have higher rates of water access, this trend only seems to apply when looking at countries that have a GDP per Capita of about $50,000 or less. Countries with a GDP per capita of $50,000 or greater will more often than not have almost 100% of their population have access to a basic water source. Additionally, as time goes on, we see that there seems to be an improvement overall in the percentage of the population that have water access for all countries, with most countries having been able to increase this percentage over time.
-One other notable observation that can be made from this animated plot is that the world region with seemingly the highest percentage of water access on average is Europe, while the region with the lowest percentage on average seems to be Africa. 
+One other notable observation that can be made from this animated plot is that the world region with seemingly the highest percentage of water access on average is Europe, while the region with the lowest percentage on average seems to be Africa.
 
+Because we can see that the relationship between GDP per capita and Water Access is far from being linear, we would like to perform a logit transformation on the proportion of a country's population that has basic water access (our response variable) before fitting a linear model to help with this issue of non-linearity. A plot containing a fitted linear model alongside our transformed response variable follows.
 ```{r}
-gdp_v_water |> 
+gdp_v_water_mean <- gdp_v_water |> 
   group_by(country, region) |> 
   summarize(mean_gdp = mean(gdp_pc),
             mean_access = mean(access_pct)
             ) |> 
+  mutate(logit_meanaccess = log((mean_access)/(101 - mean_access)))
+
+gdp_v_water_mean |> 
   ggplot(aes(x = mean_gdp,
-             y = log(mean_access/(101-mean_access))
+             y = logit_meanaccess
              )
          ) +
   geom_point() +
   geom_smooth(method = "lm",
               aes(x = mean_gdp,
-                  y = log(mean_access/(101-mean_access)),
+                  y = logit_meanaccess,
                   group = 1),
               color = "red"
               ) +
@@ -357,20 +362,15 @@ gdp_v_water |>
        title = "Relationship between avg. Water Access and avg. GDP"
        )
 ```
-
-
 ### Linear Regression
+In addition to our plot containing a linear regression model, we can also create and obtain the coefficients for this model.
 
 ```{r}
-gdp_v_water_mean <- gdp_v_water |> 
-  group_by(country, region) |> 
-  summarize(mean_gdp = mean(gdp_pc),
-            mean_access = mean(access_pct)
-            )
-
-model <- lm(log(mean_access/(101-mean_access)) ~ mean_gdp, data = gdp_v_water_mean)
+#| output: false
+model <- lm(logit_meanaccess ~ mean_gdp, data = gdp_v_water_mean)
 summary(model)
 ```
+Our estimated linear regression model (after performing a logit transformation on our response variable) is: log(ŷ/(100-ŷ)) = 1.516 + 0.0000463x. Since the intercept for our model is 1.516, then the logit value of having access to a basic water supply for countries with an average GDP per capita of zero is 1.516. Similarly, because our model's slope is 0.0000463, then when a country's GDP per capita increases by one dollar, the logit value of access to a basic water supply is expected to increase by 0.0000463.
 
 ### Model Fit
 
