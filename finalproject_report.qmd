@@ -331,7 +331,7 @@ gdp_v_water |>
 ```
 
 When assessing the relationship between Water Access vs. GDP over time through an animated plot, we can see that there generally seems to be a strong, positive **non-linear** relationship between the two variables; while countries with larger GDP per capita tend to have higher rates of water access, this trend only seems to apply when looking at countries that have a GDP per Capita of about $50,000 or less. Countries with a GDP per capita of $50,000 or greater will more often than not have almost 100% of their population have access to a basic water source. Additionally, as time goes on, we see that there seems to be an improvement overall in the percentage of the population that have water access for all countries, with most countries having been able to increase this percentage over time.
-One other notable observation that can be made from this animated plot is that the world region with seemingly the highest percentage of water access on average is Europe, while the region with the lowest percentage on average seems to be Africa.
+One other notable observation that can be made from this animated plot is that the world region with seemingly the highest percentage of water access on average is Europe, while the region with the lowest percentage on average seems to be Africa. 
 
 ```{r}
 gdp_v_water |> 
@@ -372,14 +372,20 @@ model <- lm(log(mean_access/(101-mean_access)) ~ mean_gdp, data = gdp_v_water_me
 summary(model)
 ```
 
+### Model Fit
+
 ```{r}
-kable(tibble(Access_Variance = var(gdp_v_water_mean$mean_access),
+kable(tibble(Access_Variance = var(log(gdp_v_water_mean$mean_access/(101 - gdp_v_water_mean$mean_access))),
 Prediction_Variance = var(augment(model)$.fitted),
 Residual_Variance = var(augment(model)$.resid)))
 ```
 
-### Model Fit
+
 
 ## Simulation
+
+```{r}
+plot(y = predict(model, newdata = data.frame(mean_gdp = gdp_v_water_mean$mean_gdp)) + rnorm(194, mean = 0, sd =  sigma(model)), x = (log(gdp_v_water_mean$mean_access / (101 - gdp_v_water_mean$mean_access))))
+```
 
 
