@@ -395,6 +395,99 @@ To assess our model's fit, we can use variances for the response, fitted, and re
 Only about 47.1% of the variation in the response can be accounted for by our model, which indicates that we have a very poor model, and suggests that there is a very weak linear relationship between the GDP per capita of a country and its logit value for the percentage of the country's population that has access to a basic water source. Therefore, a linear model may not be the best way to describe the relationship between these two variables, which confirms what we saw earlier when plotting the linear regression model.
 
 ## Simulation
+To better assess how our fitted linear model performs at explaining the total variability seen in the response variable, we can do some simulation!
+
+### Visualizating Simulations from the Model
+To start off, we can generate simulated observations by using the predicted values from our linear regression model and add random errors to each one using the residual standard error from the same model.
+```{r}
+set.seed(7256)
+
+# Creating function that adds random noise to simulate 'observed' values
+addnoise <- function(x, mean = 0, sd) {
+  new_x <- x + rnorm(length(x),
+                     mean,
+                     sd
+                     )
+  return(new_x)
+}
+
+# Extracting predicted values and standard deviation of residuals from fitted model
+logit_predict <- predict(model)
+resid_sigma <- sigma(model)
+
+# Testing function and creating a set of simulated observations
+sim_logit <- tibble(sim_logit_meanaccess = addnoise(x = logit_predict, sd = resid_sigma))
+sim_logit
+
+# Adding newly generated observations to a dataset containing the original observed values
+sim_data <- gdp_v_water_mean |> 
+  ungroup() |> 
+  filter(is.na(logit_meanaccess) == FALSE,
+         is.na(mean_access) == FALSE
+         ) |> 
+  select(mean_gdp, logit_meanaccess) |> 
+  bind_cols(sim_logit)
+
+# Visualizing and comparing the simulation from our model to the original data
+sim_data |> 
+  ggplot(aes(x = mean_gdp,
+             y = logit_meanaccess
+             )
+         ) + 
+  geom_point()
+
+sim_data |> 
+  ggplot(aes(x = mean_gdp,
+             y = sim_logit_meanaccess
+             )
+         ) + 
+  geom_point()
+```
+### Generating Multiple Predictive Checks
+Instead of creating just one dataset of simulated observations, we can generate 1000 simulated datasets. From here, we can regress the observed dataset against each one of the 1000 simulated datasets to generate multiple R^2 values, from where we can assess the distribution of the R^2 values to determine how well our original linear regression model describes the dataset (by determining how much variability seen in the observed logit water access is accounted for by our similated data based on the linear model).
+
+```{r}
+set.seed(7256)
+
+# Generating 1000 simulated sets of observations and putting them into one dataset
+nsims <- 10
+sim_data <- map_dfc(.x = 1:nsims,
+                     .f = ~ tibble(sim = addnoise(logit_predict,
+                                                  sd = resid_sigma
+                                                  )
+                                   )
+                     )
+
+# Cleaning the simulated dataset
+colnames(sim_data) <- colnames(sim_data) |> 
+  str_replace(pattern = "\\.\\.\\.",
+              replace = "_"
+              )
+
+# Combining this simulated dataset with a dataset containing the original observed values
+sim_data <- gdp_v_water_mean |> 
+  ungroup() |> 
+  filter(is.na(mean_gdp) == FALSE,
+         is.na(logit_meanaccess) == FALSE
+         ) |> 
+  select(logit_meanaccess) |> 
+  bind_cols(sim_data)
+
+head(sim_data)
+
+# Regressing observed values to each set of simulated values to generate r-squared values
+reg_sim <- map(.x = sim_data,
+               .f = ~ lm(logit_meanaccess ~ .x,
+                         data = sim_data)
+               ) |> 
+  map(.f = ~ glance(.x)) |> 
+  map_dbl(.f = ~ .x$r.squared)
+  
+# Removing the r-squared value corresponding to logit_meanaccess ~ logitmeanaccess
+reg_sim <- reg_sim[names(reg_sim) != "logit_meanaccess"]
+```
+
+
 
 ```{r}
 plot(y = predict(model, newdata = data.frame(mean_gdp = gdp_v_water_mean$mean_gdp)) + rnorm(194, mean = 0, sd =  sigma(model)), x = (log(gdp_v_water_mean$mean_access / (101 - gdp_v_water_mean$mean_access))))
