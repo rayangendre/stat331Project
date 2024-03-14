@@ -369,6 +369,8 @@ gdp_v_water_mean |>
 ```
 From this plot, we can see that even with a transformation, there still seems to be a somewhat weak, positive linear relationship between the average GDP per capita of a country and the logit of the population percentage with access to a basic water source, though this relationship is much improved in terms of linearity over the relationship with the original non transformed response. Additionally, we can also see that there may be some data points in which some people may consider outliers. Most notably, there is one country that has a relatively high GDP per capita compared to the other countries. By rearranging our combined dataset by the mean GDP per capita in descending order and grabbing the first observation, we can determine that this country with the highest average GDP per capita is Monaco, a country in Europe with an average GDP per capita of $186,521.74 and a logit value of 4.6052.
 
+This plot also helps us assess the assumptions we make when doing a linear regression: Linearity, Homoscedasticity, Independence, and Normality. First looking at Linearity, the assumption that the relationship between GDP and Water Access is linear, as stated above it is clear that GDP Per Capita and the Logit of Water Access are not linearly related given the curve in the graph. Next, examining homoscedasticity, the assumption that all observations have the variance in the error, by examining the residual plot we have determined that due to a clear pattern existing in the residuals that this assumption is violated. Moving onto independence, the assumption that each observation is independent from another, is also mildly violated as we would expect geographically similar regions to have similar GDP per capitas. However, this should only mildly influence results. Finally looking at normality, the assumption that for any value of GDP, the water access is normally distributed, we have determined that this assumption is ok based on the QQ plot of the residuals.
+
 ```{r}
 #| output: false
 gdp_v_water_mean |> 
@@ -396,8 +398,6 @@ Our estimated linear regression model (after performing a logit transformation o
 Since the intercept for our model is 1.516, then the logit value for countries with an average GDP per capita of zero is 1.516 (corresponding to a population percentage value of `r round(101*(1/(1+2.72^(-1.516))), 2)`, which was obtained by undoing the original logit transformation through an inverse). Similarly, because our model's slope is 0.0000463, then when a country's GDP per capita increases by one dollar, the logit value of the population percentage that has access to a basic water supply is expected to increase by 0.0000463.
 
 ### Model Fit
-
-(INCLUDE ASSESSMENT OF LINE CONDITIONS HERE)
 
 ```{r}
 kable(
@@ -505,7 +505,7 @@ sim_data |>
        )
 ```
 ### Generating Multiple Predictive Checks
-Instead of creating just one dataset of simulated observations, we can generate 1000 simulated datasets. From here, we can regress the observed dataset against each one of the 1000 simulated datasets to generate multiple R^2 values, from where we can assess the distribution of the R^2 values to determine how well our original linear regression model describes the dataset (by determining how much variability seen in the observed logit water access is accounted for by our similated data based on the linear model).
+Instead of creating just one dataset of simulated observations, we can generate 1000 simulated datasets. From here, we can regress the observed dataset against each one of the 1000 simulated datasets to generate multiple R^2 values, from where we can assess the distribution of the R^2 values to determine how well our original linear regression model describes the dataset (by determining how much variability seen in the observed logit water access is accounted for by our simulated data based on the linear model).
 
 ```{r}
 set.seed(7256)
