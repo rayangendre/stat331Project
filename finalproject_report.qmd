@@ -293,7 +293,7 @@ gdp_v_water <- gdp_clean |>
 kable(head(gdp_v_water), format = "markdown")
 ```
 
-## Linear Regression
+## Assessing the Linear Relationship
 Now that we have our combined dataset, we can now assess the relationship between a country's GDP per capita and the proportion of their population that has access to water. Before formally analyzing this relationship through a fitted linear regression model, we would like to look at the relationship between the two variables over time.
 
 ### Data Visualization
@@ -334,7 +334,11 @@ gdp_v_water |>
 When assessing the relationship between Water Access vs. GDP over time through an animated plot, we can see that there generally seems to be a strong, positive **non-linear** relationship between the two variables; while countries with larger GDP per capita tend to have higher rates of water access, this trend only seems to apply when looking at countries that have a GDP per Capita of about $50,000 or less. Countries with a GDP per capita of $50,000 or greater will more often than not have almost 100% of their population have access to a basic water source. Additionally, as time goes on, we see that there seems to be an improvement overall in the percentage of the population that have water access for all countries, with most countries having been able to increase this percentage over time.
 One other notable observation that can be made from this animated plot is that the world region with seemingly the highest percentage of water access on average is Europe, while the region with the lowest percentage on average seems to be Africa (which makes sense as European countries seem to have the highest GDP per capita while African countries seem to have the lowest).
 
-Because we can see that the relationship between GDP per capita and Water Access is far from being linear, we would like to perform a logit transformation on the proportion of a country's population that has basic water access (our response variable) before fitting a linear model to help with this issue of non-linearity. A plot containing a fitted linear model alongside our transformed response variable follows.
+Because we can see that the relationship between GDP per capita and Water Access is far from being linear, we would like to perform a logit transformation on the average proportion of a country's population that has basic water access (our response variable) before fitting a linear model to help with this issue of non-linearity using the following formula:
+
+ln(*average water access* / (101 - *average water access*))
+
+A plot containing a fitted linear model alongside our transformed response variable follows.
 ```{r}
 gdp_v_water_mean <- gdp_v_water |> 
   group_by(country, region) |> 
@@ -358,41 +362,57 @@ gdp_v_water_mean |>
   theme_bw() +
   labs(x = "GDP Per Capita (averaged over the years)",
        y = "",
-       subtitle = "% of Pop. with Basic Water Access (averaged over the years)",
-       title = "Relationship between avg. Water Access and avg. GDP"
-       )
+       subtitle = "Logit of the Pop. Percentage with Basic Water Access (averaged over the years)",
+       title = "Relationship between LOGIT avg. Water Access and avg. GDP"
+       ) +
+  scale_y_continuous(limits = c(0, 6))
 ```
+From this plot, we can see that even with a transformation, there still seems to be a somewhat weak, positive linear relationship between the average GDP per capita of a country and the logit of the population percentage with access to a basic water source, though this relationship is much improved in terms of linearity over the relationship with the original non transformed response. Additionally, we can also see that there may be some data points in which some people may consider outliers. Most notably, there is one country that has a relatively high GDP per capita compared to the other countries. By rearranging our combined dataset by the mean GDP per capita in descending order and grabbing the first observation, we can determine that this country with the highest average GDP per capita is Monaco, a country in Europe with an average GDP per capita of $186,521.74 and a logit value of 4.6052.
+
+```{r}
+#| output: false
+gdp_v_water_mean |> 
+  ungroup() |> 
+  slice_max(order_by = mean_gdp,
+            n = 1)
+```
+
+
 ### Linear Regression
 In addition to our plot containing a linear regression model, we can also create and obtain the coefficients for this model.
 
 ```{r}
-#| output: false
+#| output: true
 model <- lm(logit_meanaccess ~ mean_gdp, data = gdp_v_water_mean)
 model
-summary(model)
-augment(model)
-anova(model)
+#summary(model)
+#augment(model)
+#anova(model)
 ```
 Our estimated linear regression model (after performing a logit transformation on our response variable) is: 
 
-ln(ŷ/(101-ŷ)) = 1.516 + 0.0000463x. 
+ŷ = predicted ln(*mean water access*/(101- *mean water access*)) = 1.516 + 0.0000463(*mean GDP per capita*). 
 
-Since the intercept for our model is 1.516, then the logit value for countries with an average GDP per capita of zero is 1.516 (corresponding to a percentage value of `r round(101*(1/(1+2.72^(-1.516))), 2)` of the population, which was obtained by undoing the original logit transformation through an inverse). Similarly, because our model's slope is 0.0000463, then when a country's GDP per capita increases by one dollar, the logit value corresponding to having access to a basic water supply is expected to increase by 0.0000463 (which corresponds to a percentage value of `r round(101*(1/(1+2.72^(-0.0000463))), 2)`).
+Since the intercept for our model is 1.516, then the logit value for countries with an average GDP per capita of zero is 1.516 (corresponding to a population percentage value of `r round(101*(1/(1+2.72^(-1.516))), 2)`, which was obtained by undoing the original logit transformation through an inverse). Similarly, because our model's slope is 0.0000463, then when a country's GDP per capita increases by one dollar, the logit value of the population percentage that has access to a basic water supply is expected to increase by 0.0000463.
 
 ### Model Fit
+
+(INCLUDE ASSESSMENT OF LINE CONDITIONS HERE)
+
 ```{r}
 kable(
-  tibble(Access_Variance = var(augment(model)$logit_meanaccess),
+  tibble(LogitAccess_Variance = var(augment(model)$logit_meanaccess),
          Prediction_Variance = var(augment(model)$.fitted),
          Residual_Variance = var(augment(model)$.resid)
          )
 )
 ```
+
 To assess our model's fit, we can use variances for the response, fitted, and residual values. From here, we can calculate the proportion of the variability seen in our response variable that can be explained by our estimated linear regression model, which in this case is:
 
-1.156303/2.454607 = 1-(1.298303/2.454607) = 0.471
+1.156/2.455 = 1-(1.300/2.455) = 0.471
 
-Only about 47.1% of the variation in the response can be accounted for by our model, which indicates that we have a very poor model, and suggests that there is a very weak linear relationship between the GDP per capita of a country and its logit value for the percentage of the country's population that has access to a basic water source. Therefore, a linear model may not be the best way to describe the relationship between these two variables, which confirms what we saw earlier when plotting the linear regression model.
+Only about 47.1% of the variation in the response can be accounted for by our model, which indicates that we have a very poor model, and suggests that there is a very weak linear relationship between the GDP per capita of a country and the logit value of the percentage of the country's population that has access to a basic water source. Therefore, a linear model may not be the best way to describe the relationship between these two variables, which confirms what we saw earlier when plotting the linear regression model.
 
 ## Simulation
 To better assess how our fitted linear model performs at explaining the total variability seen in the response variable, we can do some simulation!
@@ -434,14 +454,24 @@ sim_data |>
              y = logit_meanaccess
              )
          ) + 
-  geom_point()
+  geom_point() +
+  scale_y_continuous(limits = c(0, 8))
 
 sim_data |> 
   ggplot(aes(x = mean_gdp,
              y = sim_logit_meanaccess
              )
          ) + 
-  geom_point()
+  geom_point() +
+  scale_y_continuous(limits = c(0, 8))
+
+sim_data |> 
+  ggplot(aes(x = sim_logit_meanaccess,
+             y = logit_meanaccess),
+         ) +
+  geom_point() +
+  scale_x_continuous(limits = c(0, 10)) +
+  scale_y_continuous(limits = c(0, 10))
 ```
 ### Generating Multiple Predictive Checks
 Instead of creating just one dataset of simulated observations, we can generate 1000 simulated datasets. From here, we can regress the observed dataset against each one of the 1000 simulated datasets to generate multiple R^2 values, from where we can assess the distribution of the R^2 values to determine how well our original linear regression model describes the dataset (by determining how much variability seen in the observed logit water access is accounted for by our similated data based on the linear model).
@@ -451,7 +481,7 @@ set.seed(7256)
 
 # Generating 1000 simulated sets of observations and putting them into one dataset
 nsims <- 10
-sim_data <- map_dfc(.x = 1:nsims,
+sim_data2 <- map_dfc(.x = 1:nsims,
                      .f = ~ tibble(sim = addnoise(logit_predict,
                                                   sd = resid_sigma
                                                   )
@@ -459,34 +489,34 @@ sim_data <- map_dfc(.x = 1:nsims,
                      )
 
 # Cleaning the simulated dataset
-colnames(sim_data) <- colnames(sim_data) |> 
+colnames(sim_data2) <- colnames(sim_data2) |> 
   str_replace(pattern = "\\.\\.\\.",
               replace = "_"
               )
 
 # Combining this simulated dataset with a dataset containing the original observed values
-sim_data <- gdp_v_water_mean |> 
+sim_data2 <- gdp_v_water_mean |> 
   ungroup() |> 
   filter(is.na(mean_gdp) == FALSE,
          is.na(logit_meanaccess) == FALSE
          ) |> 
   select(logit_meanaccess) |> 
-  bind_cols(sim_data)
+  bind_cols(sim_data2)
 
 head(sim_data)
 
 # Regressing observed values to each set of simulated values to generate r-squared values
-reg_sim <- map(.x = sim_data,
+reg_sim <- map(.x = sim_data2,
                .f = ~ lm(logit_meanaccess ~ .x,
-                         data = sim_data)
+                         data = sim_data2)
                ) |> 
   map(.f = ~ glance(.x)) |> 
   map_dbl(.f = ~ .x$r.squared)
   
 # Removing the r-squared value corresponding to logit_meanaccess ~ logitmeanaccess
 reg_sim <- reg_sim[names(reg_sim) != "logit_meanaccess"]
+reg_sim
 ```
-
 
 
 ```{r}
