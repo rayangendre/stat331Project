@@ -293,6 +293,8 @@ gdp_v_water <- gdp_clean |>
 kable(head(gdp_v_water), format = "markdown")
 ```
 
+The final dataset contains 216 different countries over the years 2000 to 2022. Not every country has data for every year. For each country, only years that have data for both GDP and water access are included. (Describe data more)
+
 ## Assessing the Linear Relationship
 Now that we have our combined dataset, we can now assess the relationship between a country's GDP per capita and the proportion of their population that has access to water. Before formally analyzing this relationship through a fitted linear regression model, we would like to look at the relationship between the two variables over time.
 
