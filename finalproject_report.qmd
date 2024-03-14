@@ -360,7 +360,7 @@ gdp_v_water_mean |>
               color = "red"
               ) +
   theme_bw() +
-  labs(x = "GDP Per Capita (averaged over the years)",
+  labs(x = "GDP Per Capita (averaged over the years) (2017 US $)",
        y = "",
        subtitle = "Logit of the Pop. Percentage with Basic Water Access (averaged over the years)",
        title = "Relationship between LOGIT avg. Water Access and avg. GDP"
@@ -462,7 +462,7 @@ sim_data |>
               color = "red"
               ) +
   theme_bw() +
-  labs(x = "GDP Per Capita (averaged over the years)",
+  labs(x = "GDP Per Capita (averaged over the years) (2017 US $)",
        y = "",
        subtitle = "Logit of the Pop. Percentage with Basic Water Access (averaged over the years)",
        title = "Relationship between Observed LOGIT avg. Water Access and avg. GDP"
@@ -482,7 +482,7 @@ sim_data |>
               color = "red"
               ) +
   theme_bw() +
-  labs(x = "GDP Per Capita (averaged over the years)",
+  labs(x = "GDP Per Capita (averaged over the years) (2017 US $)",
        y = "",
        subtitle = "Simulated Logit of the Pop. Percentage with Basic Water Access (averaged over the years)",
        title = "Relationship between Simulated LOGIT avg. Water Access and avg. GDP"
