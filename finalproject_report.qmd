@@ -453,17 +453,41 @@ sim_data |>
   ggplot(aes(x = mean_gdp,
              y = logit_meanaccess
              )
-         ) + 
+         ) +
   geom_point() +
-  scale_y_continuous(limits = c(0, 8))
+  geom_smooth(method = "lm",
+              aes(x = mean_gdp,
+                  y = logit_meanaccess,
+                  group = 1),
+              color = "red"
+              ) +
+  theme_bw() +
+  labs(x = "GDP Per Capita (averaged over the years)",
+       y = "",
+       subtitle = "Logit of the Pop. Percentage with Basic Water Access (averaged over the years)",
+       title = "Relationship between Observed LOGIT avg. Water Access and avg. GDP"
+       ) +
+  scale_y_continuous(limits = c(0, 6))
 
 sim_data |> 
   ggplot(aes(x = mean_gdp,
              y = sim_logit_meanaccess
              )
-         ) + 
+         ) +
   geom_point() +
-  scale_y_continuous(limits = c(0, 8))
+  geom_smooth(method = "lm",
+              aes(x = mean_gdp,
+                  y = logit_meanaccess,
+                  group = 1),
+              color = "red"
+              ) +
+  theme_bw() +
+  labs(x = "GDP Per Capita (averaged over the years)",
+       y = "",
+       subtitle = "Simulated Logit of the Pop. Percentage with Basic Water Access (averaged over the years)",
+       title = "Relationship between Simulated LOGIT avg. Water Access and avg. GDP"
+       ) +
+  scale_y_continuous(limits = c(0, 6))
 
 sim_data |> 
   ggplot(aes(x = sim_logit_meanaccess,
@@ -471,7 +495,14 @@ sim_data |>
          ) +
   geom_point() +
   scale_x_continuous(limits = c(0, 10)) +
-  scale_y_continuous(limits = c(0, 10))
+  scale_y_continuous(limits = c(0, 10)) +
+  geom_abline(slope = 1, intercept = 0, color = "red", linewidth = 1) + 
+  theme_bw() +
+  labs(x = "Simulated Logit of the Pop. Percentage with Basic Water Access (averaged over the years)",
+       y = "",
+       subtitle = "Observed Logit of the Pop. Percentage with Basic Water Access (averaged over the years)",
+       title = "Relationship between Simulated LOGIT avg. Water Access and Observed LOGIT avg. Water Access"
+       )
 ```
 ### Generating Multiple Predictive Checks
 Instead of creating just one dataset of simulated observations, we can generate 1000 simulated datasets. From here, we can regress the observed dataset against each one of the 1000 simulated datasets to generate multiple R^2 values, from where we can assess the distribution of the R^2 values to determine how well our original linear regression model describes the dataset (by determining how much variability seen in the observed logit water access is accounted for by our similated data based on the linear model).
@@ -519,8 +550,6 @@ reg_sim
 ```
 
 
-```{r}
-plot(y = predict(model, newdata = data.frame(mean_gdp = gdp_v_water_mean$mean_gdp)) + rnorm(194, mean = 0, sd =  sigma(model)), x = (log(gdp_v_water_mean$mean_access / (101 - gdp_v_water_mean$mean_access))))
-```
+
 
 
