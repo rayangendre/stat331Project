@@ -547,6 +547,13 @@ reg_sim <- map(.x = sim_data2,
 # Removing the r-squared value corresponding to logit_meanaccess ~ logitmeanaccess
 reg_sim <- reg_sim[names(reg_sim) != "logit_meanaccess"]
 reg_sim
+
+# Creating a histogram
+tibble(rsquared = reg_sim) |> 
+  ggplot(aes(x = rsquared)) +
+  geom_histogram(bins = 30,
+                 color = "darkorange",
+                 fill = "orange")
 ```
 
 
