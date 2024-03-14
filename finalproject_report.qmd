@@ -511,7 +511,7 @@ Instead of creating just one dataset of simulated observations, we can generate 
 set.seed(7256)
 
 # Generating 1000 simulated sets of observations and putting them into one dataset
-nsims <- 10
+nsims <- 1000
 sim_data2 <- map_dfc(.x = 1:nsims,
                      .f = ~ tibble(sim = addnoise(logit_predict,
                                                   sd = resid_sigma
@@ -556,6 +556,9 @@ tibble(rsquared = reg_sim) |>
                  fill = "orange")
 ```
 
+### Discussion of Implications
+
+The distribution of our R^2 values for our simulation ranges from 0.1 to 0.38, with a median approximately at 0.22. Our model struggles to describe the actual data which is seen in our low R^2 values. This struggle is expected as our data is not linear and has a curvature due to percentages being capped at 100% and GDP's being uncapped values.
 
 
 
