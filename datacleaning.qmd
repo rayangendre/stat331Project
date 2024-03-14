@@ -9,6 +9,7 @@ editor: visual
 library(tidyverse)
 here::i_am("stat331Project/datacleaning.qmd")
 library(here)
+library(broom)
 gdp <- read_csv(here("stat331Project", "gdp_pcap.csv"))
 water_access <- read_csv(here("stat331Project", "at_least_basic_water_source_overall_access_percent.csv"))
 ```
@@ -35,4 +36,9 @@ water_access_clean <- water_access |>
 joined <- gdp_clean |>
   merge(water_access_clean, by = c("country", "year"))
 write_csv(joined, "cleanData.csv")
+```
+
+```{r}
+model <- lm(gdppc ~ access, data = joined)
+augment(model)
 ```
