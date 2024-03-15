@@ -1,5 +1,5 @@
 ---
-title: "Final Project Written Report"
+title: "STAT 331 Final Project Written Report"
 author: "Alex Arrieta, Rayan Gendre, Alvaro Ramos, Jackson Isidor"
 format: 
   html:
@@ -18,40 +18,46 @@ execute:
   warning: false
 ---
 ```{r setup}
+# note: installing the gifski package is required for the animated plot to properly render 
 library(tidyverse)
 library(here)
 library(knitr)
-library(gganimate)
 library(broom)
+library(gganimate)
+library(kableExtra)
+library(patchwork)
 
 # loading in our data sets
 gdp <- read_csv(here("data", "gdp_pcap.csv"))
 wateraccess <- read_csv(here("data", "at_least_basic_water_source_overall_access_percent.csv"))
 ```
 
-## Project Proposal
-For this project, we are interested in assessing the relationship between a country's GDP and the percentage of people within that country that have access to a basic water source. To do accomplish this, we will be using two datasets from Gapminder that correspond to our variables of interest.
-
-### The Data
-Our two variables of interest (and their related datasets) are:
-
-**At least a basic water source, overall access %** ***[Response]***
-
-This variable's dataset displays the percent of people who are using at least basic water services by Country and by Year from 2000 to 2022. The percentage encompasses both the people who have access to basic water services as well as those who have access to safe water services. The dataset defines a basic water service as water from an improved source and collection is not more than 30 minutes for a round trip.
+## Introduction
+For this project, we are interested in assessing the relationship between a country's GDP and the amount of people within that country that have access to a basic water source. To accomplish this, we will be using two datasets from Gapminder corresponding to variables of interest to be be used for answering our question, which are:
 
 **GDP per capita (Price and inflation adjusted)** ***[Explanatory]***
 
-This variable's dataset displays the Gross domestic product per person adjusted for differences in purchasing power, where each observation displays information for a Country in a given Year beginning in 1800 and going to present day. The values are displayed in international dollars and are fixed at 2017 prices.
+This variable's dataset provides information about the Gross Domestic Product per person for a country in a given year, which has been calculated by dividing the total value of everything that's been produced in a country (GDP) by the number of people living in the given country. The GDP per capita is measured in a currency called "international dollars" that's been adjusted for inflation, differences in purchasing power between countries, and is measured in 2017's prices (actual unit is `PPP$2017`). This dataset contains information for 195 countries from 1800 up to 2021, with "what-if" or projected years that have been calculated beyond 2021 up to 2100.
+
+**At least a basic water source, overall access %** ***[Response]***
+
+This variable's dataset provides information about the percentage of the population who use at least basic water services or who have access to a basic water source for a country in a given year, with this percentage encompassing both people who have access to these basic water services/sources as well as those who use safely managed water services. Gapminder defines a basic water service/source as drinking water that comes from an improved source such that the time it takes to collect the water does not take more than 30 minutes for a round trip. This dataset contains information for 215 countries from 2000 to 2022.
+
+For each raw dataset, each observation corresponds to a country with the values of the variable of interest between certain years. For the GDP per capita dataset, the years are from 1800 to 2100, and for the water access dataset, the years are from 2000 to 2022.
 
 ### Hypothesized Relationship
-We hypothesize that there will be a positive relationship between the percentage of the country's population that has access to water and the GDP per capita. This means that as the percentage of the population has access to water increases, then the GDP per capita of the country will also increase. Our basis for this is that countries with more prevalent global economies such as the United States and European countries have better access to water and safer modern ways for their citizens to access water. And when people have better access to water they can spend more time developing other areas of the country and business which leads to a more powerful economy and a better GDP per capita.
+We hypothesize that there will be a positive relationship between a country's GDP per capita and the percentage of the country's population that has access to a basic water source. This means we expect that as the GDP per captia of a country increases, then the percentage of the country's population that has access to water should also increase as well.
+
+Our basis for this is that countries with more prevalent global economies such as the United States and European countries have better access to water as well as more safer, modern ways for their citizens to access this water. And when people have better access to water they can spend more time developing other areas of the country and business which leads to a more powerful economy and a better/higher GDP per capita.
 
 ### Data Cleaning
-Because each variable has their own dataset, we will have to clean and combine the two datasets together to assess the relationship between the two variables. Starting with the GDP per capita dataset, some values have the letter `k` embedded alongside the numeric value, preventing us to pivot the dataset into a longer format. To get around this, we forced every column in our dataset to become character variables so every column is the same data type. Once our data has been pivoted, we could then address the issue of embedded `k`'s by extracting the numbers for values that did contain a `k`, and then multiplying these values by 1000 while also converting these values to a numeric data type. Afterwards, we converted the remaining variables (country and year) to an appropriate data type.
+Because the GDP per capita and the basic water access percentage have their own seperate datasets, we will have to clean and combine these two datasets together in order to assess the relationship between the two variables. 
 
-The process for cleaning the water access dataset was much easier than for the GDP per capita dataset, as we did not have to deal with the issue of embedded `k`'s. Therefore, all we had to do for this dataset was pivot and then convert the remaining columns/variables to an appropriate data type. Additionally, we dropped any observtions that contained any missing or NA values.
+Starting with the GDP per capita dataset, some values have the letter `k` embedded alongside the numeric value, preventing us to pivot the dataset into a longer format. To get around this, we forced every column in our dataset to become character variables so that every column is of the same data type. Once our data has been pivoted, we could then address the issue of embedded `k`'s by extracting the numbers for values that did contain a `k`, and then multiplying these values by 1000 while also converting these values to a numeric data type. Afterwards, we converted the remaining variables (country and year) to appropriate data types.
 
-Once each dataset had been pivoted and cleaned, we could then join our two datasets through an inner join by country and by year. To help with visualization, we also created a new variable called `region` which indicates the world region that a country resides in.
+The process for cleaning the water access dataset was much easier than for the GDP per capita dataset, as we did not have to deal with the issue of embedded `k`'s. Therefore, all we had to do for this dataset was pivot and then convert the remaining columns/variables to an appropriate data type. Additionally, we dropped any observations that contained any missing values.
+
+Once each dataset had been pivoted and cleaned, we could then join our two datasets through an inner join by country and year. To help with visualization, we also created a new region variable which indicates the world region that a country resides in. A preview of the final cleaned dataset follows:
 
 ```{r}
 # Pivoting and cleaning the gdp dataset
@@ -290,13 +296,22 @@ gdp_v_water <- gdp_clean |>
          .after = country
          )
 
-kable(head(gdp_v_water), format = "markdown")
+gdp_v_water |> 
+  head(n = 5) |> 
+  kbl(table.attr = 'data-quarto-disable-processing = "true"') |> 
+  kable_styling(bootstrap_options = c("condensed",
+                                      "bordered",
+                                      "striped"
+                                      ),
+                font_size = 15,
+                full_width = F
+                )
 ```
 
-The final dataset contains 216 different countries over the years 2000 to 2022. Not every country has data for every year. For each country, only years that have data for both GDP and water access are included. (Describe data more)
+In the end, our cleaned and combined dataset has dimensions 4339x5, indicating that there are a total of 4339 rows/observations and 5 columns/variables. Each observation corresponds to a unique combination of country and year with associated values for the GDP per captia, overall country population percentage that has access to a basic water source, and the associated  world region for this unique combination. The dataset contains 216 different countries over the years of 2000 to 2022. Not every country has data for every year, so only the country and year combinations that have data for both GDP per capita and water access variables have been kept.
 
 ## Assessing the Linear Relationship
-Now that we have our combined dataset, we can now assess the relationship between a country's GDP per capita and the proportion of their population that has access to water. Before formally analyzing this relationship through a fitted linear regression model, we would like to look at the relationship between the two variables over time.
+Now that we have our combined dataset, we can now assess the relationship between a country's GDP per capita and the percentage of its population that has basic access to water. Before formally analyzing this relationship through a fitted linear regression model, we would like to look at the relationship between the two variables over time and see how it changes through an animated plot that follows:
 
 ### Data Visualization
 ```{r}
@@ -320,10 +335,11 @@ gdp_v_water |>
                                 "#5e3c99")
                      ) +
   scale_shape_manual(values = 21:24) +
-  labs(x = "GDP Per Capita",
+  scale_y_continuous(minor_breaks = seq(0, 100, by = 5)) +
+  labs(x = "GDP Per Capita (PPP$2017)",
        y = "",
-       subtitle = "% of Pop. with Basic Water Access",
-       title = "Relationship between Water Access and GDP",
+       subtitle = "% of Country Pop. with Basic Water Access",
+       title = "Relationship between GDP Per Capita and Water Access",
        tag = "Year: {frame_time}",
        fill = "World Region",
        color = "World Region",
@@ -333,14 +349,17 @@ gdp_v_water |>
   ease_aes('linear')
 ```
 
-When assessing the relationship between Water Access vs. GDP over time through an animated plot, we can see that there generally seems to be a strong, positive **non-linear** relationship between the two variables; while countries with larger GDP per capita tend to have higher rates of water access, this trend only seems to apply when looking at countries that have a GDP per Capita of about $50,000 or less. Countries with a GDP per capita of $50,000 or greater will more often than not have almost 100% of their population have access to a basic water source. Additionally, as time goes on, we see that there seems to be an improvement overall in the percentage of the population that have water access for all countries, with most countries having been able to increase this percentage over time.
-One other notable observation that can be made from this animated plot is that the world region with seemingly the highest percentage of water access on average is Europe, while the region with the lowest percentage on average seems to be Africa (which makes sense as European countries seem to have the highest GDP per capita while African countries seem to have the lowest).
+When assessing the relationship between Water Access vs. GDP Per Capita over time through this animated plot, we can see that there generally seems to be a strong, positive **non-linear** relationship between the two variables; while countries with larger GDP per capita tend to have higher rates of water access, this trend only seems to apply when looking at countries that have a GDP per capita of about $50,000 or less. Countries with a GDP per capita of $50,000 or greater will more often than not have almost 100% of their population have access to a basic water source. 
 
-Because we can see that the relationship between GDP per capita and Water Access is far from being linear, we would like to perform a logit transformation on the average proportion of a country's population that has basic water access (our response variable) before fitting a linear model to help with this issue of non-linearity using the following formula:
+Additionally, as time goes on, we see that there seems to be an improvement overall in the percentage of the population that have access to a basic water source across all countries, with most countries having been able to increase this percentage over time.
+
+One other notable observation that can be made from this animated plot is that the world region with seemingly the highest percentage of basic water access on average is Europe, while the region with the lowest percentage on average seems to be Africa (which makes sense as European countries seem to have the highest GDP per capita while African countries seem to have the lowest based on this same plot).
+
+In order to formally assess the relationship between a country's GDP per capita and the percentage of its population that has access to a basic water supply, we first need to average over the years for each country. Also, because we can see from the animated plot that the relationship between GDP per capita and water access is far from being linear, we would like to perform a logit transformation on the average percentage of a country's population that has basic water access before fitting a linear model to help with this issue of non-linearity using the following formula:
 
 ln(*average water access* / (101 - *average water access*))
 
-A plot containing a fitted linear model alongside our transformed response variable follows.
+A plot containing a fitted linear model alongside our transformed response variable follows:
 ```{r}
 gdp_v_water_mean <- gdp_v_water |> 
   group_by(country, region) |> 
@@ -362,66 +381,92 @@ gdp_v_water_mean |>
               color = "red"
               ) +
   theme_bw() +
-  labs(x = "GDP Per Capita (averaged over the years) (2017 US $)",
+  labs(x = "GDP Per Capita (averaged over the years) (PPP$2017)",
        y = "",
-       subtitle = "Logit of the Pop. Percentage with Basic Water Access (averaged over the years)",
-       title = "Relationship between LOGIT avg. Water Access and avg. GDP"
+       subtitle = "LOGIT of the Pop. Percentage with Basic Water Access (averaged over the years)",
+       title = "Relationship between avg. GDP per capita and LOGIT of avg. Water Access"
        ) +
   scale_y_continuous(limits = c(0, 6))
 ```
-From this plot, we can see that even with a transformation, there still seems to be a somewhat weak, positive linear relationship between the average GDP per capita of a country and the logit of the population percentage with access to a basic water source, though this relationship is much improved in terms of linearity over the relationship with the original non transformed response. Additionally, we can also see that there may be some data points in which some people may consider outliers. Most notably, there is one country that has a relatively high GDP per capita compared to the other countries. By rearranging our combined dataset by the mean GDP per capita in descending order and grabbing the first observation, we can determine that this country with the highest average GDP per capita is Monaco, a country in Europe with an average GDP per capita of $186,521.74 and a logit value of 4.6052.
-
-This plot also helps us assess the assumptions we make when doing a linear regression: Linearity, Homoscedasticity, Independence, and Normality. First looking at Linearity, the assumption that the relationship between GDP and Water Access is linear, as stated above it is clear that GDP Per Capita and the Logit of Water Access are not linearly related given the curve in the graph. Next, examining homoscedasticity, the assumption that all observations have the variance in the error, by examining the residual plot we have determined that due to a clear pattern existing in the residuals that this assumption is violated. Moving onto independence, the assumption that each observation is independent from another, is also mildly violated as we would expect geographically similar regions to have similar GDP per capitas. However, this should only mildly influence results. Finally looking at normality, the assumption that for any value of GDP, the water access is normally distributed, we have determined that this assumption is ok based on the QQ plot of the residuals.
-
 ```{r}
 #| output: false
+# Determining the outlier with a fairly high GDP per capita
 gdp_v_water_mean |> 
   ungroup() |> 
   slice_max(order_by = mean_gdp,
             n = 1)
 ```
 
+From this plot, we can see that even with a transformation, there still seems to be a somewhat weak, positive linear relationship between the average GDP per capita of a country and the logit value of the average population percentage with access to a basic water source, though this relationship is much improved in terms of linearity over the relationship with the original non transformed water access percentage. 
 
-### Linear Regression
-In addition to our plot containing a linear regression model, we can also create and obtain the coefficients for this model.
+Additionally, we can also see that there may be some data points in which some people may consider outliers. Most notably, there is one country that has a relatively high average GDP per capita compared to the other countries. By rearranging our combined dataset by the mean GDP per capita in descending order and grabbing the first observation, we can determine that this country with the highest average GDP per capita is **Monaco**, a country in Europe with an average GDP per capita of $186,521.74 and a logit value of 4.6052.
+
+This plot also helps us assess the assumptions we make when performing a linear regression: *Linearity*, *Independence*, *Normality*, and *Equal Variances*.
+
+First looking at the condition of *Linearity*, our assumption that the relationship between GDP per capita and water access is linear is violated, as from the plot above it is clear that the GDP per capita and the logit transformation of water access percentage are not linearly related given the curvature seen in the graph. Additionally, the water access percentage for any given country can only go up to a maximum value of 100%, thus the logit transformation for this percentage will also be capped at a certain value, which is 4.605 based on the formula given earlier. This becomes an issue when fitting a linear model as this model will provide predicted logit values above 4.605 which are not possible in reality.
+
+Next, when examining our assumption of *Independence*, or the assumption that each observation is independent from one another, we can decide that this condition is also mildly violated based on the idea that we would expect geographically similar regions to have similar GDP per capitas. This violation of independence may mildly influence results.
+
+Moving onto the assessing our assumption of *Normality*, or the assumption that the residuals (the difference/error between the actual observed logit values and predicted logit values) from our fitted model follow a normal distribution, we have determined that this assumption is okay based on a QQ plot that we created of the residuals, which had shown that the majority of the data points closely follow the provided line.
+
+Finally, when assessing our assumption of *Equal Variances*, or the assumption that the predicted logit value of the population percentage of basic water access for every observation and their corresponding residuals share the same variance, we examined a residual vs. predicted/fitted values plot and we were able to conclude that due to a clear pattern existing between the predicted values and the residuals, our assumption of constant variance is violated.
+
+### Linear Regression and Interpetations
+In addition to our plot containing a fitted linear regression model, we can also create and obtain the coefficients for this model (which has the logit of the mean population percentage that has access to a basic water source for a country as a function of the mean GDP per capita):
 
 ```{r}
 #| output: true
 model <- lm(logit_meanaccess ~ mean_gdp, data = gdp_v_water_mean)
-model
 #summary(model)
 #augment(model)
 #anova(model)
+model
 ```
-Our estimated linear regression model (after performing a logit transformation on our response variable) is: 
+Thus, our estimated linear regression model is: 
 
-ŷ = predicted ln(*mean water access*/(101- *mean water access*)) = 1.516 + 0.0000463(*mean GDP per capita*). 
+**ŷ = predicted ln(*mean water access*/(101 - *mean water access*)) = 1.516 + 0.0000463(*mean GDP per capita*)**
 
-Since the intercept for our model is 1.516, then the logit value for countries with an average GDP per capita of zero is 1.516 (corresponding to a population percentage value of `r round(101*(1/(1+2.72^(-1.516))), 2)`, which was obtained by undoing the original logit transformation through an inverse). Similarly, because our model's slope is 0.0000463, then when a country's GDP per capita increases by one dollar, the logit value of the population percentage that has access to a basic water supply is expected to increase by 0.0000463.
+Since the intercept for our model is 1.516, then this means that the expected logit value for countries that have an average GDP per capita of zero is 1.516 (corresponding to a population percentage value of `r round(101*(1/(1+2.72^(-1.516))), 2)`%, which was obtained by undoing the original logit transformation through an inverse). 
 
-### Model Fit
+Similarly, because our model's slope is 0.0000463, this means that when a country's GDP per capita increases by one dollar, the logit value of the average population percentage that has access to a basic water supply is expected to increase by 0.0000463. To better understand this slope, let us consider multiple GDP per capita values and their predicted *non transformed* average population percentage with basic water access. 
+
+For a country with an average GDP per capita of $10,000, their non transformed average population percentage with basic water access is expected to be `r round(101*(1/(1+2.72^(-1.979))), 2)`%. If the country were to increase their average GDP per capita to $20,000, then their average population percentage with basic water access is predicted to increase to `r round(101*(1/(1+2.72^(-2.442))), 2)`% (an increase of 4.18 percentage points from an average GDP per capita of $10,000 to $20,000). If this country was to further increase their average GDP per capita to $30,000, then their average population percentage is expected to only increase to `r round(101*(1/(1+2.72^(-2.905))), 2)`% (an increase of only 2.84 percentage points from an average GDP per capita $20,000 to $30,000).
+
+### Model Fit Assessment
+To assess our model's fit, we can use variances calculated for the response, fitted, and residuals. A table containing all three values follow:
 
 ```{r}
-kable(
-  tibble(LogitAccess_Variance = var(augment(model)$logit_meanaccess),
-         Prediction_Variance = var(augment(model)$.fitted),
-         Residual_Variance = var(augment(model)$.resid)
-         )
-)
+tibble(LogitAccess_Variance = var(augment(model)$logit_meanaccess),
+       Fitted_Variance = var(augment(model)$.fitted),
+       Residual_Variance = var(augment(model)$.resid)
+       ) |> 
+  kbl(table.attr = 'data-quarto-disable-processing = "true"') |> 
+  kable_styling(full_width = FALSE,
+                bootstrap_options = c("condensed",
+                                      "bordered",
+                                      "striped"
+                                      )
+                )
 ```
 
-To assess our model's fit, we can use variances for the response, fitted, and residual values. From here, we can calculate the proportion of the variability seen in our response variable that can be explained by our estimated linear regression model, which in this case is:
+From here using this table, we can calculate the proportion of the variability seen in the logit transformation of the average population percentage that has access to a basic water supply that can be explained by our estimated linear regression model and its predicted logit values, which in this case is:
 
 1.156/2.455 = 1-(1.300/2.455) = 0.471
 
-Only about 47.1% of the variation in the response can be accounted for by our model, which indicates that we have a very poor model, and suggests that there is a very weak linear relationship between the GDP per capita of a country and the logit value of the percentage of the country's population that has access to a basic water source. Therefore, a linear model may not be the best way to describe the relationship between these two variables, which confirms what we saw earlier when plotting the linear regression model.
+With a calculated proportion of 0.471, this means that only about 47.1% of the variation seen in the logit values for the actual average population percentages of basic water access can be accounted for by our model, which indicates that we have a very poor model, and suggests that there is a very weak linear relationship between the average GDP per capita of a country and the logit value of the average percentage of the country's population that has access to a basic water source. Therefore, a linear model may not be the best way to describe the relationship between these two variables, which confirms what we saw earlier when plotting the linear regression model, as well as in our animated plot.
 
 ## Simulation
-To better assess how our fitted linear model performs at explaining the total variability seen in the response variable, we can do some simulation!
+To better assess how our fitted linear model performs at explaining the total variability seen in the response variable, we can do some simulation and perform predictive checks!
 
 ### Visualizating Simulations from the Model
-To start off, we can generate simulated observations by using the predicted values from our linear regression model and add random errors to each one using the residual standard error from the same model.
+To start off, in order to see what the data would look like if it came from our fitted linear regression model, we can first generate a set of simulated observations by using the predicted logit values from the fitted model and add random errors to each predicted logit value, where the random errors follow a normal distribution with a mean of 0 and a standard deviation that corresponds to the residual standard error obtained from the same model.
+
+From here, we can then put the set of simulated logit values together with the actual observed logits of the average population percentage that have access to a basic water source and average GDP per capita for each country in one singular dataset so we can create plots and visualize our simulated data. Side-by-side scatterplots for the observed and simulated logits vs the average GDP per capita, as well as a scatterplot of the observed vs simulated logit values all follow:
+
 ```{r}
+#| fig-width: 8
+#| fig-height: 4
+#| warning: false
 set.seed(7256)
 
 # Creating function that adds random noise to simulate 'observed' values
@@ -433,22 +478,17 @@ addnoise <- function(x, mean = 0, sd) {
   return(new_x)
 }
 
-# Extracting predicted values and standard deviation of residuals from fitted model
-logit_predict <- predict(model)
-resid_sigma <- sigma(model)
-
 # Testing function and creating a set of simulated observations
-sim_logit <- tibble(sim_logit_meanaccess = addnoise(x = logit_predict, sd = resid_sigma))
-sim_logit
+sim_data <- tibble(sim_logit_meanaccess = addnoise(x = predict(model), sd = sigma(model)))
 
 # Adding newly generated observations to a dataset containing the original observed values
 sim_data <- gdp_v_water_mean |> 
   ungroup() |> 
   filter(is.na(logit_meanaccess) == FALSE,
-         is.na(mean_access) == FALSE
+         is.na(mean_gdp) == FALSE
          ) |> 
   select(mean_gdp, logit_meanaccess) |> 
-  bind_cols(sim_logit)
+  bind_cols(sim_data)
 
 # Visualizing and comparing the simulation from our model to the original data
 sim_data |> 
@@ -464,12 +504,13 @@ sim_data |>
               color = "red"
               ) +
   theme_bw() +
-  labs(x = "GDP Per Capita (averaged over the years) (2017 US $)",
+  labs(x = "Avg. GDP Per Capita (PPP$2017)",
        y = "",
-       subtitle = "Logit of the Pop. Percentage with Basic Water Access (averaged over the years)",
-       title = "Relationship between Observed LOGIT avg. Water Access and avg. GDP"
+       subtitle = "Observed Logits of the Avg. Pop. Percentage \n with Basic Water Access",
+       title = "Observed LOGITs"
        ) +
-  scale_y_continuous(limits = c(0, 6))
+  scale_y_continuous(limits = c(0, 6)) +
+  scale_x_continuous(limits = c(0, 120000)) +
 
 sim_data |> 
   ggplot(aes(x = mean_gdp,
@@ -484,13 +525,20 @@ sim_data |>
               color = "red"
               ) +
   theme_bw() +
-  labs(x = "GDP Per Capita (averaged over the years) (2017 US $)",
+  labs(x = "Avg. GDP Per Capita (PPP$2017)",
        y = "",
-       subtitle = "Simulated Logit of the Pop. Percentage with Basic Water Access (averaged over the years)",
-       title = "Relationship between Simulated LOGIT avg. Water Access and avg. GDP"
+       subtitle = "Simulated Logits of the Avg. Pop. Percentage \n with Basic Water Access",
+       title = "Simulated LOGITs"
        ) +
-  scale_y_continuous(limits = c(0, 6))
+  scale_y_continuous(limits = c(0, 6)) +
+  scale_x_continuous(limits = c(0, 120000)) +
+  
+  plot_layout(nrow = 1)
+```
 
+When looking at the side-by-side scatterplots of the observed and simulated logit values versus the average GDP per capita, we can see that there is a drastic difference between the two plots; while the simulated logit values have a somewhat weak, but noticeable linear relationship with the average GDP per capita, the relationship between the observed logit values and average GDP per capita is far from being linear. Confirming what we saw earlier when we first plotted the fitted linear regression model between the average GDP per capita and the logit transformation of the average percentage of a country's population that has access to a basic water source, not only does the linear model more often than not under predict the logit value for most of the average GDP per capita values, but the linear model also gives predicted logit values that should not be possible due to the logit transformation of the average population percentage having a maximum value of 4.605 as explained in Section 2.1 where we assessed the LINE conditions for our this linear model.
+
+```{r}
 sim_data |> 
   ggplot(aes(x = sim_logit_meanaccess,
              y = logit_meanaccess),
@@ -498,70 +546,76 @@ sim_data |>
   geom_point() +
   scale_x_continuous(limits = c(0, 10)) +
   scale_y_continuous(limits = c(0, 10)) +
-  geom_abline(slope = 1, intercept = 0, color = "red", linewidth = 1) + 
+  geom_abline(slope = 1, intercept = 0, color = "blue", linewidth = 1) + 
   theme_bw() +
-  labs(x = "Simulated Logit of the Pop. Percentage with Basic Water Access (averaged over the years)",
+  labs(x = "Simulated Logit of the Avg. Pop. Percentage with Basic Water Access",
        y = "",
-       subtitle = "Observed Logit of the Pop. Percentage with Basic Water Access (averaged over the years)",
-       title = "Relationship between Simulated LOGIT avg. Water Access and Observed LOGIT avg. Water Access"
+       subtitle = "Observed Logit of the Avg. Pop. Percentage with Basic Water Access",
+       title = "Relationship between Observed LOGITs of avg. Water Access \n and Simulated LOGITs of avg. Water Access"
        )
 ```
-### Generating Multiple Predictive Checks
-Instead of creating just one dataset of simulated observations, we can generate 1000 simulated datasets. From here, we can regress the observed dataset against each one of the 1000 simulated datasets to generate multiple R^2 values, from where we can assess the distribution of the R^2 values to determine how well our original linear regression model describes the dataset (by determining how much variability seen in the observed logit water access is accounted for by our simulated data based on the linear model).
+Moving onto assessing the relationship between the simulated and observed logit values of the average population percentage that have access to a basic water source, we can see that there is very much a weak linear relationship between the simulated and observed logit values. In other words, very little of the variability that seen in the observed logit values of the average percentage of a country's population that has access to a basic water supply is explained by the simulated logit values generated from the fitted linear regression model between the average GDP per capita and the logit of the average population percentage that has access to a basic water source.
+
+### Generating Multiple Predictive Checks and R-Squared Values
+Instead of creating just one dataset of simulated observations to check our model's fit, we can generate many, many simulated datasets. To do this, we generated at least 1000 different datasets with each containing a set of simulated logit values (where each dataset was generated using the same process outlined in the previous section), and we could combined all of these datasets together alongside the actual observed logits of the average population percentage that have access to a basic water source into one singular, large dataset.
+
+From here, we can regress the observed logit values against each one of the 1000 different sets of simulated logit values to generate 1000 R-squared values. From here, we can assess the distribution of the R-squared values to determine how well our simulated logit values generated from our original linear regression model describe the variation seen in the actual observed logit water access values. A histogram displaying the distribution of our simulated R-squared values follows:
 
 ```{r}
 set.seed(7256)
 
 # Generating 1000 simulated sets of observations and putting them into one dataset
 nsims <- 1000
-sim_data2 <- map_dfc(.x = 1:nsims,
-                     .f = ~ tibble(sim = addnoise(logit_predict,
-                                                  sd = resid_sigma
+sim_data <- map_dfc(.x = 1:nsims,
+                     .f = ~ tibble(sim = addnoise(predict(model),
+                                                  sd = sigma(model)
                                                   )
                                    )
                      )
 
-# Cleaning the simulated dataset
-colnames(sim_data2) <- colnames(sim_data2) |> 
+# Cleaning the names generated in the simulated dataset
+colnames(sim_data) <- colnames(sim_data) |> 
   str_replace(pattern = "\\.\\.\\.",
               replace = "_"
               )
 
 # Combining this simulated dataset with a dataset containing the original observed values
-sim_data2 <- gdp_v_water_mean |> 
+sim_data <- gdp_v_water_mean |> 
   ungroup() |> 
   filter(is.na(mean_gdp) == FALSE,
          is.na(logit_meanaccess) == FALSE
          ) |> 
   select(logit_meanaccess) |> 
-  bind_cols(sim_data2)
-
-head(sim_data)
+  bind_cols(sim_data)
 
 # Regressing observed values to each set of simulated values to generate r-squared values
-reg_sim <- map(.x = sim_data2,
+reg_sim <- map(.x = sim_data,
                .f = ~ lm(logit_meanaccess ~ .x,
-                         data = sim_data2)
+                         data = sim_data)
                ) |> 
   map(.f = ~ glance(.x)) |> 
   map_dbl(.f = ~ .x$r.squared)
   
 # Removing the r-squared value corresponding to logit_meanaccess ~ logitmeanaccess
 reg_sim <- reg_sim[names(reg_sim) != "logit_meanaccess"]
-reg_sim
 
 # Creating a histogram
 tibble(rsquared = reg_sim) |> 
   ggplot(aes(x = rsquared)) +
   geom_histogram(bins = 30,
                  color = "darkorange",
-                 fill = "orange")
+                 fill = "orange"
+                 ) +
+  scale_x_continuous(breaks = seq(0.1, 0.4, by = 0.05)) +
+  labs(x = "R-Squared Value",
+      y = "",
+      subtitle = "Frequency/Count",
+      title = "Distribution of Simulated R-squared Values")
 ```
 
-### Discussion of Implications
+The distribution of our R-squared values from our simulation ranges from `r round(min(reg_sim), 2)` to `r round(max(reg_sim), 2)`, with a mean R-squared value of approximately `r round(mean(reg_sim), 4)`. Because the center of the R-squared values is at `r round(mean(reg_sim), 2)`, this suggests that when generating many, many simulated sets of logit values using our fitted linear model, the average percent of the variability seen in the actual observed logit values (of the average population percentage that has access to a basic water source) that can be accounted for by the simulated data is about `r round(100*mean(reg_sim), 2)`%. This implies that data simulated from our fitted linear model is far from being similar to the data that we observed, and that our model struggles to describe the actual data. This struggle was expected and confirms what we saw earlier as the relationship between the average GDP per capita and the logit transformation of the average percentage of the population that have access to a basic water source is not linear as there is curvature in the relationship due to percentages being capped at 100% and GDP's having uncapped values.
 
-The distribution of our R^2 values for our simulation ranges from 0.1 to 0.38, with a median approximately at 0.22. Our model struggles to describe the actual data which is seen in our low R^2 values. This struggle is expected as our data is not linear and has a curvature due to percentages being capped at 100% and GDP's being uncapped values.
+## Concluding Discussion
+In the end, we found that the relationship between the GDP per capita of a country and the percent of the country's population that has access to a basic water source is very much non-linear. Therefore, if anyone is interested in fitting a model for the purposes of describing the relationship between these two variables, we recommend using a model that is much more complicated than a linear model, as more complex models are needed in order to do good job at describing this relationship.
 
-
-
-
+Aside from this issue of a nonlinear relationship between the GDP per capita of a country and the percent of a country's population that has access to a basic water supply, we nonetheless found through our data analysis that in general, more people now than ever before have access to a basic water supply and thus, access to safe drinking water. While some countries, especially those within the African continent, still continue to have low percentages of their population that have access to a basic water source, these percentages have been able to steadily increase over time across all countries. While naivety might play into the following assumption, we still expect that the percent of the population that do have access to a basic water supply and to safe drinking water will continue to increase overtime for the majority of the countries in the world.
